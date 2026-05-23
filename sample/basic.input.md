@@ -1,0 +1,5 @@
+| Name | Age | City |
+|---|---|---|
+| Alice | 30 | Paris |
+| Bob | 25 | London |
+| Charlie | 42 | New York |

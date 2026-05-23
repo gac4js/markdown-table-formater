@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Format markdown table column widths."""
+"""Format markdown table column widths using column(1)."""
 
 import argparse
 import re
+import subprocess
 import sys
 
 
@@ -49,21 +50,20 @@ def rebuild_separator(formatted_line: str, orig_line: str) -> str:
 
 
 def format_table(lines: list[str]) -> list[str]:
-    rows = [split_cells(line) for line in lines]
+    result = subprocess.run(
+        ['column', '-s', '|', '-o', '|', '-t'],
+        input='\n'.join(lines) + '\n',
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return lines
 
-    col_widths: list[int] = []
-    for row in rows:
-        for i, cell in enumerate(row):
-            if i >= len(col_widths):
-                col_widths.append(0)
-            col_widths[i] = max(col_widths[i], len(cell))
-
-    formatted = []
-    for line, row in zip(lines, rows):
-        padded = [cell.ljust(col_widths[i]) for i, cell in enumerate(row)]
-        formatted.append('|' + '|'.join(padded) + '|')
+    formatted = result.stdout.rstrip('\n').split('\n')
 
     for i, orig_line in enumerate(lines):
+        if i >= len(formatted):
+            break
         if is_separator_cells(split_cells(orig_line)):
             formatted[i] = rebuild_separator(formatted[i], orig_line)
 
@@ -95,7 +95,7 @@ def process(text: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description='Format markdown table column widths.'
+        description='Format markdown table column widths using column(1).'
     )
     parser.add_argument('files', nargs='+', metavar='FILE')
     parser.add_argument(
