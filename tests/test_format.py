@@ -35,6 +35,18 @@ class TestSamples(unittest.TestCase):
     def test_mixed(self) -> None:
         self._check('mixed')
 
+    def test_emoji(self) -> None:
+        self._check('emoji')
+
+    def test_no_trailing_pipe(self) -> None:
+        self._check('no_trailing_pipe')
+
+    def test_mixed_trailing_pipe(self) -> None:
+        self._check('mixed_trailing_pipe')
+
+    def test_escaped_pipe(self) -> None:
+        self._check('escaped_pipe')
+
 
 class TestIdempotent(unittest.TestCase):
     """Running the formatter twice must produce the same result."""
@@ -52,6 +64,18 @@ class TestIdempotent(unittest.TestCase):
 
     def test_mixed(self) -> None:
         self._check('mixed')
+
+    def test_emoji(self) -> None:
+        self._check('emoji')
+
+    def test_no_trailing_pipe(self) -> None:
+        self._check('no_trailing_pipe')
+
+    def test_mixed_trailing_pipe(self) -> None:
+        self._check('mixed_trailing_pipe')
+
+    def test_escaped_pipe(self) -> None:
+        self._check('escaped_pipe')
 
 
 class TestTrailingNewline(unittest.TestCase):
