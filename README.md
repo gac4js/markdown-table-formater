@@ -1,32 +1,6 @@
-# markdown-table-formater.py — contexte et conception
+# markdown-table-formater.py
 
-## Problème
-
-Les fichiers markdown du projet contiennent des tableaux syntaxiquement valides mais non alignés, difficiles à lire directement dans un éditeur de texte.
-
-## Solution envisagée
-
-Utiliser la commande système `column` pour réaligner chaque tableau :
-
-```bash
-column -s '|' -o '|' -t
-```
-
-La commande prend `|` comme séparateur d'entrée et de sortie, et active le mode tableau pour aligner les colonnes.
-
-## Point délicat identifié
-
-La ligne séparateur markdown (ex: `|---|---|`) est transformée par `column` en `| ---   | ---   |` — les tirets ne remplissent plus toute la largeur de colonne. Le script doit détecter ces lignes et régénérer les tirets pour qu'ils occupent toute la largeur, en préservant les marqueurs d'alignement (`:---`, `:---:`, `---:`).
-
-## Approche retenue
-
-Script Python (`markdown-table-formater.py`) qui :
-
-1. Parcourt le fichier ligne par ligne
-2. Accumule les lignes de tableau (commençant par `|`) dans un tampon
-3. À la fin de chaque bloc de tableau, envoie le tampon à `column` via `subprocess`
-4. Détecte les lignes séparateur et remplace leur contenu par des tirets pleine largeur
-5. Réassemble le fichier et préserve le newline final
+Formate les tableaux markdown en alignant les colonnes, sans dépendance externe.
 
 ## Usage
 
@@ -40,3 +14,29 @@ python3 markdown-table-formater.py -i fichier.md
 # plusieurs fichiers
 python3 markdown-table-formater.py -i *.md
 ```
+
+## Fonctionnement
+
+Le script parcourt le fichier ligne par ligne, accumule les blocs de tableau (lignes commençant par `|`) puis les formate :
+
+1. Calcul de la largeur maximale de chaque colonne (en largeur d'affichage, pas en nombre de caractères)
+2. Padding de chaque cellule à cette largeur
+3. Régénération des lignes séparateur (`|---|---|`) avec des tirets pleine largeur, en préservant les marqueurs d'alignement (`:---`, `:---:`, `---:`)
+
+Le `|` final de chaque ligne est préservé ou absent selon l'original.
+
+## Cas gérés
+
+- **Caractères larges** (emoji `✅`, `❌`, CJK…) : comptés sur 2 colonnes d'affichage
+- **Pipe échappé** (`\|`) : traité comme caractère littéral, pas comme séparateur de colonne
+- **Tableau sans `|` final** : la dernière colonne n'est pas paddée (comportement identique à `column(1)`)
+- **Tableau mixte** : lignes sans `|` final dans un tableau qui en a — paddées et alignées avec les autres
+
+## Tests
+
+```bash
+tests/run.sh          # lance pytest
+tests/run.sh -v       # mode verbeux
+```
+
+Les fichiers d'exemple sont dans `sample/` (paires `*.input.md` / `*.expected.md`).
