@@ -4,6 +4,23 @@
 import argparse
 import re
 import sys
+import unicodedata
+
+_ESCAPED_PIPE = '\x00'  # placeholder for \| inside cells
+
+
+def display_width(s: str) -> int:
+    """Return the terminal display width of s (wide chars count as 2)."""
+    width = 0
+    for c in s:
+        eaw = unicodedata.east_asian_width(c)
+        if eaw in ('W', 'F'):
+            width += 2
+        elif unicodedata.category(c) in ('Mn', 'Me', 'Cf') or ord(c) == 0xFE0F:
+            pass  # zero-width combining / variation selectors
+        else:
+            width += 1
+    return width
 
 
 def is_table_line(line: str) -> bool:
@@ -11,12 +28,12 @@ def is_table_line(line: str) -> bool:
 
 
 def split_cells(line: str) -> list[str]:
-    s = line.strip()
+    s = line.strip().replace('\\|', _ESCAPED_PIPE)
     if s.startswith('|'):
         s = s[1:]
     if s.endswith('|'):
         s = s[:-1]
-    return s.split('|')
+    return [c.replace(_ESCAPED_PIPE, '\\|') for c in s.split('|')]
 
 
 def is_separator_cells(cells: list[str]) -> bool:
@@ -32,7 +49,7 @@ def rebuild_separator(formatted_line: str, orig_line: str) -> str:
 
     new_cells = []
     for i, cell in enumerate(fmt_cells):
-        width = len(cell)
+        width = display_width(cell)
         orig = orig_cells[i].strip() if i < len(orig_cells) else '-'
         left_colon = orig.startswith(':')
         right_colon = orig.endswith(':')
@@ -48,20 +65,35 @@ def rebuild_separator(formatted_line: str, orig_line: str) -> str:
     return lead + '|'.join(new_cells) + trail
 
 
-def format_table(lines: list[str]) -> list[str]:
-    rows = [split_cells(line) for line in lines]
+def _raw_split(line: str) -> list[str]:
+    """Split on | preserving trailing empty cell (from trailing |), removing only leading empty."""
+    s = line.strip().replace('\\|', _ESCAPED_PIPE)
+    parts = s.split('|')
+    if parts and parts[0] == '':
+        parts = parts[1:]
+    return [p.replace(_ESCAPED_PIPE, '\\|') for p in parts]
 
-    col_widths: list[int] = []
+
+def format_table(lines: list[str]) -> list[str]:
+    rows = [_raw_split(line) for line in lines]
+    max_cols = max((len(row) for row in rows), default=0)
+
+    # Pad short rows with empty trailing cells (matches column(1) behaviour)
     for row in rows:
-        for i, cell in enumerate(row):
-            if i >= len(col_widths):
-                col_widths.append(0)
-            col_widths[i] = max(col_widths[i], len(cell))
+        while len(row) < max_cols:
+            row.append('')
+
+    # column(1) never pads the last column — compute widths for all but the last
+    col_widths = [0] * max(max_cols - 1, 0)
+    for row in rows:
+        for i, cell in enumerate(row[:-1]):
+            col_widths[i] = max(col_widths[i], display_width(cell))
 
     formatted = []
     for line, row in zip(lines, rows):
-        padded = [cell.ljust(col_widths[i]) for i, cell in enumerate(row)]
-        formatted.append('|' + '|'.join(padded) + '|')
+        cells = [cell + ' ' * (col_widths[i] - display_width(cell)) for i, cell in enumerate(row[:-1])]
+        cells.append(row[-1])  # last cell: no padding, preserves trailing | when empty
+        formatted.append('|' + '|'.join(cells))
 
     for i, orig_line in enumerate(lines):
         if is_separator_cells(split_cells(orig_line)):
