@@ -1,4 +1,4 @@
-# fmt_tables.py — contexte et conception
+# markdown-table-formater.py — contexte et conception
 
 ## Problème
 
@@ -20,7 +20,7 @@ La ligne séparateur markdown (ex: `|---|---|`) est transformée par `column` en
 
 ## Approche retenue
 
-Script Python (`fmt_tables.py`) qui :
+Script Python (`markdown-table-formater.py`) qui :
 
 1. Parcourt le fichier ligne par ligne
 2. Accumule les lignes de tableau (commençant par `|`) dans un tampon
@@ -32,11 +32,11 @@ Script Python (`fmt_tables.py`) qui :
 
 ```bash
 # aperçu sur stdout
-python3 fmt_tables.py fichier.md
+python3 markdown-table-formater.py fichier.md
 
 # modification en place
-python3 fmt_tables.py -i fichier.md
+python3 markdown-table-formater.py -i fichier.md
 
 # plusieurs fichiers
-python3 fmt_tables.py -i *.md
+python3 markdown-table-formater.py -i *.md
 ```
