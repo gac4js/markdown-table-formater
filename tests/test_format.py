@@ -7,7 +7,7 @@ from pathlib import Path
 
 _spec = importlib.util.spec_from_file_location(
     'markdown_table_formater',
-    Path(__file__).parent.parent / 'markdown-table-formater.py',
+    Path(__file__).parent.parent / 'bin' / 'markdown-table-formater.py',
 )
 _mod = importlib.util.module_from_spec(_spec)  # type: ignore[arg-type]
 _spec.loader.exec_module(_mod)  # type: ignore[union-attr]
