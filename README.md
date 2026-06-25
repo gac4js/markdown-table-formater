@@ -1,42 +1,42 @@
 # markdown-table-formater.py
 
-Formate les tableaux markdown en alignant les colonnes, sans dépendance externe.
+Formats markdown tables by aligning columns, with no external dependencies.
 
 ## Usage
 
 ```bash
-# aperçu sur stdout
-python3 markdown-table-formater.py fichier.md
+# preview on stdout
+python3 markdown-table-formater.py file.md
 
-# modification en place
-python3 markdown-table-formater.py -i fichier.md
+# in-place modification
+python3 markdown-table-formater.py -i file.md
 
-# plusieurs fichiers
+# multiple files
 python3 markdown-table-formater.py -i *.md
 ```
 
-## Fonctionnement
+## How it works
 
-Le script parcourt le fichier ligne par ligne, accumule les blocs de tableau (lignes commençant par `|`) puis les formate :
+The script reads the file line by line, accumulates table blocks (lines starting with `|`), then formats them:
 
-1. Calcul de la largeur maximale de chaque colonne (en largeur d'affichage, pas en nombre de caractères)
-2. Padding de chaque cellule à cette largeur
-3. Régénération des lignes séparateur (`|---|---|`) avec des tirets pleine largeur, en préservant les marqueurs d'alignement (`:---`, `:---:`, `---:`)
+1. Compute the maximum display width of each column (display width, not character count)
+2. Pad each cell to that width
+3. Regenerate separator lines (`|---|---|`) with full-width dashes, preserving alignment markers (`:---`, `:---:`, `---:`)
 
-Le `|` final de chaque ligne est préservé ou absent selon l'original.
+The trailing `|` on each line is preserved or omitted based on the original.
 
-## Cas gérés
+## Handled cases
 
-- **Caractères larges** (emoji `✅`, `❌`, CJK…) : comptés sur 2 colonnes d'affichage
-- **Pipe échappé** (`\|`) : traité comme caractère littéral, pas comme séparateur de colonne
-- **Tableau sans `|` final** : la dernière colonne n'est pas paddée (comportement identique à `column(1)`)
-- **Tableau mixte** : lignes sans `|` final dans un tableau qui en a — paddées et alignées avec les autres
+- **Wide characters** (emoji `✅`, `❌`, CJK…): counted as 2 display columns
+- **Escaped pipe** (`\|`): treated as a literal character, not a column separator
+- **Table without trailing `|`**: the last column is not padded (same behaviour as `column(1)`)
+- **Mixed table**: lines without trailing `|` in a table that has them — padded and aligned with the others
 
 ## Tests
 
 ```bash
-tests/run.sh          # lance pytest
-tests/run.sh -v       # mode verbeux
+tests/run.sh          # runs pytest
+tests/run.sh -v       # verbose mode
 ```
 
-Les fichiers d'exemple sont dans `sample/` (paires `*.input.md` / `*.expected.md`).
+Sample files are in `sample/` (pairs `*.input.md` / `*.expected.md`).
